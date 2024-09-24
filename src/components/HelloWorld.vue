@@ -1,157 +1,109 @@
 <template>
-  <v-container class="fill-height">
-    <v-responsive
-      class="align-centerfill-height mx-auto"
-      max-width="900"
-    >
-      <v-img
-        class="mb-4"
-        height="150"
-        src="@/assets/logo.png"
-      />
+  <v-container class="d-flex justify-center align-center fill-height">
+    <v-row>
+      <v-col cols="12" md="6">
+        <v-card>
+          <v-card-title class="text-h5">
+            Cargar Imagen Aleatoria
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="cargarImagen">
+              <v-icon left>mdi-refresh</v-icon>
+              Cargar Otra Imagen
+            </v-btn>
+          </v-card-title>
 
-      <div class="text-center">
-        <div class="text-body-2 font-weight-light mb-n1">Welcome to</div>
+          <v-card-text class="d-flex justify-center">
+            <!-- Mensaje de error si hay problemas -->
+            <v-alert v-if="error" type="error" dismissible class="mb-3">
+              {{ error }}
+            </v-alert>
 
-        <h1 class="text-h2 font-weight-bold">Vuetify</h1>
-      </div>
+            <!-- Progress circular mientras se carga la imagen -->
+            <v-progress-circular
+              v-if="cargando"
+              indeterminate
+              color="primary"
+              size="64"
+            ></v-progress-circular>
 
-      <div class="py-4" />
-
-      <v-row>
-        <v-col cols="12">
-          <v-card
-            class="py-4"
-            color="surface-variant"
-            image="https://cdn.vuetifyjs.com/docs/images/one/create/feature.png"
-            prepend-icon="mdi-rocket-launch-outline"
-            rounded="lg"
-            variant="outlined"
-          >
-            <template #image>
-              <v-img position="top right" />
-            </template>
-
-            <template #title>
-              <h2 class="text-h5 font-weight-bold">Get started</h2>
-            </template>
-
-            <template #subtitle>
-              <div class="text-subtitle-1">
-                Replace this page by removing <v-kbd>{{ `<HelloWorld />` }}</v-kbd> in <v-kbd>pages/index.vue</v-kbd>.
-              </div>
-            </template>
-
-            <v-overlay
-              opacity=".12"
-              scrim="primary"
-              contained
-              model-value
-              persistent
+            <!-- Imagen cargada -->
+            <img
+              v-if="!cargando && !error"
+              :src="imagenUrl"
+              alt="Imagen Aleatoria"
+              class="elevation-2"
+              width="200"
+              height="300"
             />
-          </v-card>
-        </v-col>
+          </v-card-text>
 
-        <v-col cols="6">
-          <v-card
-            append-icon="mdi-open-in-new"
-            class="py-4"
-            color="surface-variant"
-            href="https://vuetifyjs.com/"
-            prepend-icon="mdi-text-box-outline"
-            rel="noopener noreferrer"
-            rounded="lg"
-            subtitle="Learn about all things Vuetify in our documentation."
-            target="_blank"
-            title="Documentation"
-            variant="text"
-          >
-            <v-overlay
-              opacity=".06"
-              scrim="primary"
-              contained
-              model-value
-              persistent
-            />
-          </v-card>
-        </v-col>
-
-        <v-col cols="6">
-          <v-card
-            append-icon="mdi-open-in-new"
-            class="py-4"
-            color="surface-variant"
-            href="https://vuetifyjs.com/introduction/why-vuetify/#feature-guides"
-            prepend-icon="mdi-star-circle-outline"
-            rel="noopener noreferrer"
-            rounded="lg"
-            subtitle="Explore available framework Features."
-            target="_blank"
-            title="Features"
-            variant="text"
-          >
-            <v-overlay
-              opacity=".06"
-              scrim="primary"
-              contained
-              model-value
-              persistent
-            />
-          </v-card>
-        </v-col>
-
-        <v-col cols="6">
-          <v-card
-            append-icon="mdi-open-in-new"
-            class="py-4"
-            color="surface-variant"
-            href="https://vuetifyjs.com/components/all"
-            prepend-icon="mdi-widgets-outline"
-            rel="noopener noreferrer"
-            rounded="lg"
-            subtitle="Discover components in the API Explorer."
-            target="_blank"
-            title="Components"
-            variant="text"
-          >
-            <v-overlay
-              opacity=".06"
-              scrim="primary"
-              contained
-              model-value
-              persistent
-            />
-          </v-card>
-        </v-col>
-
-        <v-col cols="6">
-          <v-card
-            append-icon="mdi-open-in-new"
-            class="py-4"
-            color="surface-variant"
-            href="https://discord.vuetifyjs.com"
-            prepend-icon="mdi-account-group-outline"
-            rel="noopener noreferrer"
-            rounded="lg"
-            subtitle="Connect with Vuetify developers."
-            target="_blank"
-            title="Community"
-            variant="text"
-          >
-            <v-overlay
-              opacity=".06"
-              scrim="primary"
-              contained
-              model-value
-              persistent
-            />
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-responsive>
+          <!-- Progress linear mientras se carga la imagen -->
+          <v-progress-linear
+            v-if="cargando"
+            indeterminate
+            color="primary"
+            class="mb-3"
+          ></v-progress-linear>
+        </v-card>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
-<script setup>
-  //
+<script>
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    const imagenUrl = ref('');
+    const cargando = ref(false);
+    const error = ref('');
+
+    // Función para cargar la imagen
+    const cargarImagen = async () => {
+      cargando.value = true;
+      error.value = ''; // Limpiar cualquier error previo
+
+      try {
+        // Generar nueva URL de imagen aleatoria
+        const nuevaImagenUrl = `https://picsum.photos/200/300?random=${new Date().getTime()}`;
+
+        // Crear un nuevo objeto de imagen para asegurar que se cargue antes de actualizar
+        const img = new Image();
+        img.src = nuevaImagenUrl;
+
+        // Esperar hasta que la imagen se haya cargado correctamente
+        img.onload = () => {
+          imagenUrl.value = nuevaImagenUrl;
+          cargando.value = false;
+        };
+
+        // Manejar error de carga de imagen
+        img.onerror = () => {
+          manejarError();
+        };
+      } catch (e) {
+        manejarError();
+      }
+    };
+
+    // Función para manejar errores de carga
+    const manejarError = () => {
+      error.value = 'Error al cargar la imagen. Inténtalo nuevamente.';
+      cargando.value = false;
+    };
+
+    // Cargar una imagen al montar el componente
+    cargarImagen();
+
+    return {
+      imagenUrl,
+      cargando,
+      error,
+      cargarImagen,
+      manejarError,
+    };
+  },
+};
 </script>
+
