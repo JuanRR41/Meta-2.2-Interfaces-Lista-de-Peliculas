@@ -14,12 +14,32 @@
           </v-card-title>
 
           <v-card-text class="scroll-container">
+            <!-- Muestra el progress circular si está cargando -->
+            <v-progress-circular
+              v-if="cargando"
+              indeterminate
+              color="primary"
+              class="d-flex justify-center my-5"
+            ></v-progress-circular>
+
+            <!-- Muestra un alert si hay un error -->
+            <v-alert
+              v-if="error"
+              type="error"
+              dismissible
+              class="mb-3"
+            >
+              {{ error }}
+            </v-alert>
+
+            <!-- Muestra el data-table cuando no está cargando y no hay error -->
             <v-data-table
+              v-if="!cargando && !error"
               :headers="headers"
               :items="peliculas"
               class="elevation-1"
               :sort-by="['rating']"
-              :sort-desc="[true]" 
+              :sort-desc="[true]"
             >
               <!-- Mostrar el nombre de la película como enlace -->
               <template v-slot:item.movie="{ item }">
@@ -43,6 +63,14 @@
                 </v-btn>
               </template>
             </v-data-table>
+
+            <!-- Barra de progreso lineal durante la carga -->
+            <v-progress-linear
+              v-if="cargando"
+              indeterminate
+              color="primary"
+              class="mb-3"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-col>
@@ -92,6 +120,8 @@ export default {
     const peliculaEditada = ref({});
     const editIndex = ref(null);
     const esEdicion = ref(false); // Determina si es edición o agregar
+    const cargando = ref(true); // Estado de carga
+    const error = ref(''); // Estado de error
 
     // Encabezados de la tabla, agregando columna de acciones
     const headers = ref([
@@ -105,11 +135,16 @@ export default {
     const obtenerPeliculas = async () => {
       try {
         const respuesta = await fetch('https://dummyapi.online/api/movies');
+        if (!respuesta.ok) {
+          throw new Error('Error al obtener las películas');
+        }
         const data = await respuesta.json();
         peliculas.value = data;
         ordenarPorRating();
-      } catch (error) {
-        console.error('Error al obtener las películas:', error);
+      } catch (e) {
+        error.value = e.message;
+      } finally {
+        cargando.value = false;
       }
     };
 
@@ -177,7 +212,9 @@ export default {
       editarPelicula,
       guardarEdicion,
       abrirDialogAgregar,
-      agregarPelicula
+      agregarPelicula,
+      cargando,
+      error
     };
   }
 };
